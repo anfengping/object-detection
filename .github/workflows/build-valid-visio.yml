@@ -1,0 +1,46 @@
+name: Build Valid Editable Visio Files
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install native VSDX library
+        run: |
+          python -m pip install --upgrade pip
+          pip install vsdx==0.6.1
+
+      - name: Build native editable VSDX files
+        run: python build_valid_visio.py
+
+      - name: Verify generated files
+        run: |
+          test -f output/Power_Line_UAV_Valid_Editable_Visio_Files.zip
+          test "$(find output/Valid_Editable_Visio_Files -name '*.vsdx' | wc -l)" -eq 15
+          unzip -t output/Power_Line_UAV_Valid_Editable_Visio_Files.zip
+          grep -q VALID_VISIO_BUILD_OK <(python build_valid_visio.py)
+          ls -lh output/Valid_Editable_Visio_Files
+
+      - name: Upload repaired Visio package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Power-Line-UAV-Valid-Editable-Visio-Files
+          path: |
+            output/Power_Line_UAV_Valid_Editable_Visio_Files.zip
+            output/README_Visio_Repair.txt
+            output/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 3
