@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - temp-award-build-20260716
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
